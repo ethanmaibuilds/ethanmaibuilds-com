@@ -1,313 +1,1721 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ethan Mai — Building Cutsmith</title>
-  <meta name="description" content="Ethan Mai. 20 years in video post-production. Now building tools for editors at Cutsmith.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麦克 Mai — Post-Production Director · Building Cutsmith for Editors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg-elevated: #111111;
+    --bg-card: #141414;
+    --border: #1f1f1f;
+    --border-bright: #2a2a2a;
+    --text: #f5f1ea;
+    --text-muted: #8a8580;
+    --text-dim: #5c5852;
+    --accent: #d4a574;
+    --accent-dim: #8a6f50;
+    --serif: 'Fraunces', 'Noto Serif SC', serif;
+    --serif-cn: 'Noto Serif SC', 'Fraunces', serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
 
-  <!-- Open Graph for social sharing -->
-  <meta property="og:title" content="Ethan Mai — Building Cutsmith">
-  <meta property="og:description" content="20 years in video post-production. Now building tools for editors.">
-  <meta property="og:url" content="https://ethanmaibuilds.com">
-  <meta property="og:type" content="website">
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
 
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:creator" content="@EthanMaiBuilds">
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--serif);
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
 
-  <!-- Favicon (用 Cutsmith 同款,如果还没做就先空着) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22Inter,sans-serif%22 fill=%22%23ff5c1a%22>E</text></svg>">
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 100;
+    mix-blend-mode: overlay;
+  }
 
-  <style>
-    :root {
-      --bg: #0a0a0a;
-      --bg-card: #141414;
-      --text: #e8e8e8;
-      --text-muted: #888;
-      --accent: #ff5c1a;
-      --border: #222;
+  /* ===== Nav ===== */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    padding: 24px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(20px);
+    background: rgba(10,10,10,0.7);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  nav .brand { color: var(--text); font-weight: 500; }
+  nav .links { display: flex; gap: 32px; }
+  nav .links a { color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
+  nav .links a:hover { color: var(--accent); }
+  nav .lang { color: var(--text-muted); cursor: pointer; }
+  nav .lang span.active { color: var(--accent); }
+
+  /* ===== Hero ===== */
+  .hero {
+    min-height: 100vh;
+    padding: 180px 48px 120px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .hero-meta::before { content: ''; width: 32px; height: 1px; background: var(--accent); }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+  }
+  .hero h1 .cn {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 300;
+    display: block;
+    font-size: 0.32em;
+    color: var(--text-muted);
+    margin-top: 16px;
+    letter-spacing: 0.02em;
+  }
+  .hero h1 em { font-family: var(--serif); font-style: italic; color: var(--accent); font-weight: 400; }
+
+  .hero .title-line {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .hero-right {
+    border-left: 1px solid var(--border);
+    padding-left: 60px;
+    position: relative;
+  }
+  .hero-right::before {
+    content: '01';
+    position: absolute;
+    top: -8px; left: 60px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.2em;
+    background: var(--bg);
+    padding-right: 12px;
+  }
+
+  .hero-right p {
+    font-family: var(--serif-cn);
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--text);
+    font-weight: 300;
+    margin-bottom: 24px;
+  }
+  .hero-right p.en {
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .hero-stats {
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .hero-stats .stat .num {
+    font-family: var(--serif);
+    font-size: 42px;
+    font-weight: 300;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .hero-stats .stat .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+  }
+
+  /* ===== Sections ===== */
+  section {
+    padding: 140px 48px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .section-header {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 80px;
+    margin-bottom: 80px;
+    align-items: baseline;
+  }
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .section-num span { color: var(--accent); }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(36px, 4.5vw, 60px);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .section-title em { font-family: var(--serif); font-style: italic; color: var(--accent); font-weight: 400; }
+  .section-title .cn {
+    display: block;
+    font-family: var(--serif-cn);
+    font-size: 0.5em;
+    color: var(--text-muted);
+    margin-top: 12px;
+    letter-spacing: 0.08em;
+    font-weight: 400;
+  }
+
+  .label-vertical {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding-top: 8px;
+  }
+
+  /* ===== About ===== */
+  .about-grid { display: grid; grid-template-columns: 200px 1fr; gap: 80px; }
+  .about-content p {
+    font-family: var(--serif-cn);
+    font-size: 19px;
+    line-height: 1.9;
+    color: var(--text);
+    font-weight: 300;
+    margin-bottom: 28px;
+    max-width: 820px;
+  }
+  .about-content p.en {
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    font-style: italic;
+    border-left: 2px solid var(--border-bright);
+    padding-left: 22px;
+    margin-left: -24px;
+  }
+  .about-content p em {
+    font-family: var(--serif);
+    color: var(--accent);
+    font-style: italic;
+    font-weight: 400;
+  }
+  .name-story {
+    margin-top: 56px;
+    padding: 32px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    max-width: 820px;
+  }
+  .name-story .quote {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+  .name-story .quote-cn {
+    font-family: var(--serif-cn);
+    font-size: 16px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+  .legal-name {
+    margin-top: 32px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .legal-name span { color: var(--text-muted); }
+
+  /* ===== Timeline ===== */
+  .timeline { display: grid; grid-template-columns: 200px 1fr; gap: 80px; }
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 40px;
+    padding: 36px 0;
+    border-top: 1px solid var(--border);
+    align-items: baseline;
+  }
+  .timeline-item:last-child { border-bottom: 1px solid var(--border); }
+  .timeline-year {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+  }
+  .timeline-content .title {
+    font-family: var(--serif-cn);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .timeline-content .role {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+  .timeline-content .desc {
+    font-family: var(--serif-cn);
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text-muted);
+    font-weight: 300;
+    max-width: 720px;
+  }
+  .timeline-content .honor {
+    display: inline-block;
+    margin-top: 14px;
+    margin-right: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent-dim);
+    padding: 4px 10px;
+  }
+
+  /* ===== Awards (highlighted strip) ===== */
+  .awards-strip {
+    background: var(--bg-elevated);
+    margin: 0 -48px;
+    padding: 80px 48px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .awards-inner { display: grid; grid-template-columns: 200px 1fr; gap: 80px; }
+  .awards-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+  .award-card {
+    border: 1px solid var(--border-bright);
+    padding: 28px;
+    background: var(--bg);
+    transition: border-color 0.3s;
+  }
+  .award-card:hover { border-color: var(--accent); }
+  .award-card .year {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
+  }
+  .award-card .name {
+    font-family: var(--serif-cn);
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .award-card .name .en {
+    display: block;
+    font-family: var(--serif);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-muted);
+    font-weight: 300;
+    margin-top: 4px;
+  }
+  .award-card .issuer {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ===== Projects ===== */
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .project-card {
+    background: var(--bg);
+    padding: 48px;
+    transition: background 0.4s;
+    position: relative;
+  }
+  .project-card:hover { background: var(--bg-elevated); }
+  .project-card .num {
+    position: absolute;
+    top: 24px; right: 32px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+  }
+  .project-card .platform {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .project-card .name {
+    font-family: var(--serif-cn);
+    font-size: 32px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .project-card .name-en {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-style: italic;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    font-weight: 300;
+  }
+  .project-card .stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 24px 0;
+    border-top: 1px solid var(--border-bright);
+    border-bottom: 1px solid var(--border-bright);
+    margin-bottom: 20px;
+  }
+  .project-card .stat-item .k {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .project-card .stat-item .v {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+  .project-card .stat-item .v .unit {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+  .project-card .stat-item .v.text {
+    font-family: var(--serif-cn);
+    font-size: 16px;
+    color: var(--text);
+    font-weight: 400;
+  }
+  .project-card .desc {
+    font-family: var(--serif-cn);
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  /* ===== Infrastructure (THE SHOWSTOPPER) ===== */
+  .infra {
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg-elevated) 100%);
+  }
+  .infra-grid { display: grid; grid-template-columns: 200px 1fr; gap: 80px; }
+  .infra-headline {
+    font-family: var(--serif);
+    font-size: clamp(28px, 3.2vw, 44px);
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.3;
+    color: var(--text);
+    margin-bottom: 48px;
+    max-width: 820px;
+    letter-spacing: -0.01em;
+  }
+  .infra-headline .cn {
+    display: block;
+    font-family: var(--serif-cn);
+    font-style: normal;
+    font-size: 0.55em;
+    color: var(--text-muted);
+    margin-top: 16px;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  .infra-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .infra-stat {
+    padding: 36px 24px;
+    border-right: 1px solid var(--border);
+    text-align: left;
+  }
+  .infra-stat:last-child { border-right: none; }
+  .infra-stat .big-num {
+    font-family: var(--serif);
+    font-size: clamp(48px, 5vw, 72px);
+    font-weight: 300;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .infra-stat .big-num .unit {
+    font-size: 0.4em;
+    color: var(--text-muted);
+    margin-left: 4px;
+    font-weight: 300;
+  }
+  .infra-stat .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 16px;
+  }
+  .infra-stat .desc {
+    font-family: var(--serif-cn);
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .infra-detail {
+    margin-top: 48px;
+    font-family: var(--serif-cn);
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text-muted);
+    font-weight: 300;
+    max-width: 820px;
+  }
+  .infra-detail strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* ===== Team Architecture ===== */
+  .team { display: grid; grid-template-columns: 200px 1fr; gap: 80px; }
+  .team-intro {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--text);
+    margin-bottom: 48px;
+    max-width: 720px;
+    line-height: 1.4;
+  }
+  .team-intro .cn {
+    display: block;
+    font-family: var(--serif-cn);
+    font-size: 0.65em;
+    font-style: normal;
+    color: var(--text-muted);
+    margin-top: 12px;
+    line-height: 1.6;
+  }
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .team-card {
+    background: var(--bg);
+    padding: 32px;
+    transition: background 0.3s;
+  }
+  .team-card:hover { background: var(--bg-elevated); }
+  .team-card .num {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    margin-bottom: 12px;
+  }
+  .team-card h3 {
+    font-family: var(--serif-cn);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .team-card h3 .en {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 6px;
+    font-weight: 400;
+  }
+  .team-card .roles {
+    font-family: var(--serif-cn);
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-weight: 300;
+  }
+
+  /* ===== Networks ===== */
+  .platforms { display: grid; grid-template-columns: 200px 1fr; gap: 80px; }
+  .platforms-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .platform-group {
+    border: 1px solid var(--border);
+    padding: 24px;
+    transition: border-color 0.3s;
+  }
+  .platform-group:hover { border-color: var(--accent-dim); }
+  .platform-group .name {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .platform-group .count { color: var(--text-dim); font-family: var(--mono); }
+  .platform-group ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .platform-group ul li {
+    font-family: var(--serif-cn);
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+  .platform-note {
+    margin-top: 24px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  /* ===== Modern Brand Content ===== */
+  .modern { display: grid; grid-template-columns: 200px 1fr; gap: 80px; }
+  .modern-intro {
+    font-family: var(--serif-cn);
+    font-size: 17px;
+    line-height: 1.85;
+    color: var(--text);
+    margin-bottom: 48px;
+    max-width: 820px;
+    font-weight: 300;
+  }
+  .modern-intro em {
+    font-style: italic;
+    color: var(--accent);
+    font-family: var(--serif);
+    font-weight: 400;
+  }
+  .modern-clients {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .client-tile {
+    padding: 20px;
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+  .client-tile:hover {
+    border-color: var(--accent-dim);
+    transform: translateY(-2px);
+  }
+  .client-tile .brand-name {
+    font-family: var(--serif-cn);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .client-tile .work-type {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ===== Pipeline ===== */
+  .pipeline-section {
+    background: var(--bg-elevated);
+    margin: 0 -48px;
+    padding: 140px 48px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .pipeline-inner { display: grid; grid-template-columns: 200px 1fr; gap: 80px; }
+  .pipeline-content blockquote {
+    font-family: var(--serif);
+    font-size: clamp(26px, 2.8vw, 38px);
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 48px;
+    max-width: 880px;
+    letter-spacing: -0.01em;
+  }
+  .pipeline-content blockquote em { color: var(--accent); }
+  .pipeline-content blockquote .cn {
+    display: block;
+    font-family: var(--serif-cn);
+    font-style: normal;
+    font-size: 0.55em;
+    color: var(--text-muted);
+    margin-top: 16px;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  .pipeline-status {
+    padding: 28px 32px;
+    border: 1px solid var(--accent-dim);
+    background: var(--bg);
+    margin-bottom: 32px;
+  }
+  .pipeline-status .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pipeline-status .label::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .pipeline-status p {
+    font-family: var(--serif-cn);
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .pipeline-areas {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-top: 32px;
+  }
+  .pipeline-area {
+    padding: 28px;
+    border: 1px solid var(--border-bright);
+    background: var(--bg);
+  }
+  .pipeline-area h4 {
+    font-family: var(--serif-cn);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .pipeline-area h4 .en {
+    display: block;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 400;
+    margin-top: 4px;
+  }
+  .pipeline-area p {
+    font-family: var(--serif-cn);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    font-weight: 300;
+    margin-top: 12px;
+  }
+
+  /* ===== Contact ===== */
+  .contact {
+    padding: 160px 48px 120px;
+    text-align: center;
+  }
+  .contact .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 32px;
+  }
+  .contact h2 {
+    font-family: var(--serif);
+    font-size: clamp(36px, 4.5vw, 64px);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .contact h2 em { font-family: var(--serif); font-style: italic; color: var(--accent); font-weight: 400; }
+  .contact h2 .cn {
+    display: block;
+    font-family: var(--serif-cn);
+    font-size: 0.4em;
+    color: var(--text-muted);
+    margin-top: 20px;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  .contact-methods {
+    display: flex;
+    justify-content: center;
+    gap: 64px;
+    margin-top: 56px;
+    padding-top: 56px;
+    border-top: 1px solid var(--border);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    flex-wrap: wrap;
+  }
+  .contact-method { text-align: left; }
+  .contact-method .k {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .contact-method .v {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--text);
+    font-weight: 400;
+    font-style: normal;
+    letter-spacing: 0.01em;
+  }
+
+  /* ===== Footer ===== */
+  footer {
+    padding: 32px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 1024px) {
+    .hero {
+      grid-template-columns: 1fr;
+      gap: 48px;
+      padding: 140px 32px 80px;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    .hero-right { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 48px; }
+    .hero-right::before { display: none; }
+    section { padding: 100px 32px; }
+    .section-header, .about-grid, .timeline, .platforms, .team, .modern, .pipeline-inner, .awards-inner, .infra-grid {
+      grid-template-columns: 1fr;
+      gap: 32px;
     }
-
-    html, body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      line-height: 1.6;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
+    .projects-grid, .platforms-grid, .team-grid, .pipeline-areas, .awards-list {
+      grid-template-columns: 1fr;
     }
+    .modern-clients { grid-template-columns: repeat(2, 1fr); }
+    .infra-stats { grid-template-columns: repeat(2, 1fr); }
+    .infra-stat { border-right: none; border-bottom: 1px solid var(--border); }
+    .infra-stat:nth-child(odd) { border-right: 1px solid var(--border); }
+    nav { padding: 20px 24px; }
+    nav .links { display: none; }
+    .pipeline-section, .awards-strip { margin: 0 -32px; padding: 100px 32px; }
+  }
 
-    .container {
-      max-width: 560px;
-      margin: 0 auto;
-      padding: 80px 24px 60px;
-    }
-
-    /* Header */
-    .header {
-      margin-bottom: 48px;
-    }
-
-    .name {
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 8px;
-    }
-
-    .name .accent {
-      color: var(--accent);
-    }
-
-    .tagline {
-      font-size: 16px;
-      color: var(--text-muted);
-      margin-bottom: 24px;
-    }
-
-    .bio {
-      font-size: 15px;
-      color: var(--text);
-      line-height: 1.7;
-    }
-
-    .bio strong {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    /* Sections */
-    .section {
-      margin-top: 48px;
-    }
-
-    .section-title {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-    }
-
-    /* Current focus card */
-    .now-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      transition: border-color 0.2s;
-    }
-
-    .now-card:hover {
-      border-color: var(--accent);
-    }
-
-    .now-card .label {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--accent);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .now-card h2 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .now-card h2 a {
-      color: var(--text);
-      text-decoration: none;
-    }
-
-    .now-card h2 a:hover {
-      color: var(--accent);
-    }
-
-    .now-card p {
-      font-size: 14px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-    }
-
-    .now-card .link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .now-card .link:hover {
-      text-decoration: underline;
-    }
-
-    /* Links list */
-    .links {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .links li a {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      text-decoration: none;
-      font-size: 15px;
-      transition: all 0.15s;
-    }
-
-    .links li a:hover {
-      border-color: var(--accent);
-      transform: translateX(2px);
-    }
-
-    .links .label {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .links .icon {
-      font-size: 16px;
-      width: 20px;
-      text-align: center;
-    }
-
-    .links .handle {
-      color: var(--text-muted);
-      font-size: 13px;
-    }
-
-    /* Footer */
-    .footer {
-      margin-top: 64px;
-      padding-top: 32px;
-      border-top: 1px solid var(--border);
-      font-size: 13px;
-      color: var(--text-muted);
-      text-align: center;
-    }
-
-    .footer a {
-      color: var(--text-muted);
-      text-decoration: none;
-    }
-
-    .footer a:hover {
-      color: var(--accent);
-    }
-
-    /* Mobile tweaks */
-    @media (max-width: 600px) {
-      .container {
-        padding: 60px 20px 40px;
-      }
-      .name {
-        font-size: 24px;
-      }
-    }
-  </style>
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero-meta, .hero h1, .hero .title-line, .hero-right p, .hero-stats {
+    animation: fadeUp 0.9s ease-out backwards;
+  }
+  .hero h1 { animation-delay: 0.1s; }
+  .hero .title-line { animation-delay: 0.2s; }
+  .hero-right p { animation-delay: 0.3s; }
+  .hero-right p.en { animation-delay: 0.4s; }
+  .hero-stats { animation-delay: 0.5s; }
+</style>
 </head>
 <body>
-  <div class="container">
 
-    <!-- Header -->
-    <header class="header">
-      <h1 class="name">Ethan <span class="accent">Mai</span></h1>
-      <p class="tagline">Editor for 20 years. Now building tools.</p>
-      <p class="bio">
-        Started editing video in <strong>2006</strong>.
-        Spent <strong>12 years</strong> in TV variety show post-production —
-        leading a 70-person team across major Chinese networks (CCTV, iQiyi, Zhejiang TV).
-        <br><br>
-        Now an independent developer building the tools I always wished existed.
-      </p>
-    </header>
+<nav>
+  <div class="brand">Ethan Mai</div>
+  <div class="links">
+    <a href="#about">About</a>
+    <a href="#journey">Journey</a>
+    <a href="#projects">Projects</a>
+    <a href="#infrastructure">Infra</a>
+    <a href="#team">Team</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <div class="lang">
+    <span class="active">中</span> / <span>EN</span>
+  </div>
+</nav>
 
-    <!-- Current Focus -->
-    <section class="section">
-      <div class="section-title">Currently building</div>
-      <div class="now-card">
-        <div class="label">In progress</div>
-        <h2><a href="https://cutsmith.io" target="_blank" rel="noopener">Cutsmith</a></h2>
-        <p>Post-production tools for editors who ship. SRT ↔ FCPXML, batch processing, XML conversion.</p>
-        <a class="link" href="https://cutsmith.io" target="_blank" rel="noopener">
-          cutsmith.io →
-        </a>
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-meta">Post-Production Director · Building Tools · Since 2005</div>
+    <h1>
+      麦克 <em>Mai</em>
+      <span class="cn">also building Cutsmith — tools for editors</span>
+    </h1>
+    <div class="title-line">
+      <span>Content Industrialization</span>
+      <span>AI-Augmented Editorial Workflow</span>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <p>
+      20 年大型内容后期制作与团队管理经验。曾创办头部综艺后期公司轩歌传媒,带领 70+ 人全建制团队,主导 50+ 档头部综艺与纪录片项目,连续三年获国家广电总局 TV 地标年度后期制作机构。
+    </p>
+    <p class="en">
+      Two decades shaping the post-production layer of Chinese television, streaming and creator content — from broadcast era to the AI-augmented workflows of today.
+    </p>
+
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="num">20<span style="font-size:0.5em;color:var(--text-muted);">y</span></div>
+        <div class="label">Years in Post</div>
       </div>
-    </section>
+      <div class="stat">
+        <div class="num">70<span style="font-size:0.5em;color:var(--text-muted);">+</span></div>
+        <div class="label">Team Led</div>
+      </div>
+      <div class="stat">
+        <div class="num">50<span style="font-size:0.5em;color:var(--text-muted);">+</span></div>
+        <div class="label">Productions</div>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <!-- Links -->
-    <section class="section">
-      <div class="section-title">Find me online</div>
-      <ul class="links">
-        <li>
-          <a href="https://twitter.com/EthanMaiBuilds" target="_blank" rel="noopener">
-            <span class="label">
-              <span class="icon">𝕏</span>
-              <span>Twitter / X</span>
-            </span>
-            <span class="handle">@EthanMaiBuilds →</span>
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/ethanmaibuilds" target="_blank" rel="noopener">
-            <span class="label">
-              <span class="icon">⌥</span>
-              <span>GitHub</span>
-            </span>
-            <span class="handle">@ethanmaibuilds →</span>
-          </a>
-        </li>
-        <li>
-          <a href="https://www.linkedin.com/in/ethanmaibuilds" target="_blank" rel="noopener">
-            <span class="label">
-              <span class="icon">in</span>
-              <span>LinkedIn</span>
-            </span>
-            <span class="handle">/ethanmaibuilds →</span>
-          </a>
-        </li>
-        <li>
-          <a href="mailto:hello@cutsmith.io">
-            <span class="label">
-              <span class="icon">✉</span>
-              <span>Email</span>
-            </span>
-            <span class="handle">hello@cutsmith.io →</span>
-          </a>
-        </li>
-      </ul>
-    </section>
+<!-- ===== ABOUT ===== -->
+<section id="about">
+  <div class="section-header">
+    <div class="section-num"><span>01</span> / About</div>
+    <h2 class="section-title">
+      A career, <em>compressed</em>.
+      <span class="cn">二十年,一段行业的缩影</span>
+    </h2>
+  </div>
 
-    <!-- Footer -->
-    <footer class="footer">
+  <div class="about-grid">
+    <div class="label-vertical">Position<br>定位</div>
+    <div class="about-content">
       <p>
-        Building in public · Made with focus
+        从传统广播电视、卫视综艺、超级网综,到流媒体与 Creator Economy——
+        我经历了过去二十年中国内容产业完整的工业化演进。从一线剪辑师起步,到 70+ 人全建制后期团队的运营者,再到现在专注于
+        <em>AI 与后期工业化的下一代 Pipeline</em>。
       </p>
-    </footer>
+
+      <p class="en">
+        From magnetic tape to streaming, from Final Cut Pro 7 to AI-augmented editorial — I've operated at every layer of post-production scale, with a particular focus on the systems that let creative teams move fast without breaking.
+      </p>
+
+      <p>
+        在我看来,后期总监的本质不是剪辑师的延伸,而是一个内容工业体系的架构师——
+        协调团队、流程、技术、交付,让创作的能量稳定地穿过工业化管道,变成观众看到的成品。
+      </p>
+
+      <div class="name-story">
+        <div class="quote">
+          "Because I taught the <em style="color:var(--accent);font-style:italic;">Mac</em> post-production workflow at Enlight Media, colleagues began calling me <em style="color:var(--accent);font-style:italic;">'Mac'</em> — the name that followed me through eighteen years of post-production.
+        </div>
+        <div class="quote" style="margin-top:20px;">
+          When I started building tools for editors, I became <em style="color:var(--accent);font-style:italic;">Ethan Mai</em> — and the work goes by <em style="color:var(--accent);font-style:italic;">Cutsmith</em>.
+        </div>
+        <div class="quote" style="margin-top:20px;font-size:18px;color:var(--text-muted);">
+          Same person. Two chapters."
+        </div>
+        <div class="quote-cn" style="margin-top:28px;">
+          因在光线传媒教授 Mac 平台的后期制作技术,同事们开始叫我"Mac"——这个名字陪伴了我十八年的后期生涯。
+          <br><br>
+          当我开始为剪辑师构建工具的时候,我成为 Ethan Mai——开发者品牌叫 Cutsmith。
+          <br><br>
+          同一个人,两段旅程。
+        </div>
+        <div class="legal-name">
+          Post-Production · 麦克 Mai &nbsp;&nbsp;·&nbsp;&nbsp; <span>Tools & AI Workflow · Cutsmith by Ethan Mai</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== JOURNEY ===== -->
+<section id="journey">
+  <div class="section-header">
+    <div class="section-num"><span>02</span> / Journey</div>
+    <h2 class="section-title">
+      Five <em>eras</em>.
+      <span class="cn">五个阶段</span>
+    </h2>
+  </div>
+
+  <div class="timeline">
+    <div class="label-vertical">Career<br>履历</div>
+
+    <div class="timeline-track">
+
+      <div class="timeline-item">
+        <div class="timeline-year">2005 — 2010</div>
+        <div class="timeline-content">
+          <div class="title">起步 · 宣传片 / TVC / 活动视频</div>
+          <div class="role">Self-Taught · Commercial Post-Production</div>
+          <div class="desc">北京建筑大学(原北京建工学院)毕业后,自学视频后期。五年间深度参与宣传片、TVC、活动视频等商业后期制作,多次获得任职公司优秀员工荣誉,完成行业基本功的系统积累。</div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-year">2010 — 2014</div>
+        <div class="timeline-content">
+          <div class="title">光线传媒电视事业部 · 后期制作</div>
+          <div class="role">Enlight Media · Post-Production</div>
+          <div class="desc">2010 年 10 月加入光线传媒。亲历电视节目制作系统从 DPS 向 Final Cut Pro 的工业化转型,主导使用捷成世纪为光线电视事业部搭建的新一代苹果媒资系统。独当一面,为《影视风云榜》《音乐风云榜》《最佳现场》《大牌生日会》等王牌节目提供样片、导视、宣传片、预告片制作。</div>
+          <span class="honor">★ 2011 光线传媒年度优秀员工</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-year">2014 — 2023</div>
+        <div class="timeline-content">
+          <div class="title">轩歌文化 · 创始人 / 制作总监</div>
+          <div class="role">Xuange Production · Founder · Production Director</div>
+          <div class="desc">2014 年 10 月创办综艺真人秀后期制作公司轩歌传媒。九年间带领最高 70+ 人全建制后期团队,承制 50+ 档头部综艺与纪录片项目——从央视《梦想新搭档》《中国地名大会》、浙江卫视《挑战者联盟》、江苏卫视《匠心传奇》,到爱奇艺 S+ 超级网综《中国新说唱》《喜欢你我也是》。从 0 搭建 2000T 共享存储、52 站点剪辑机房、一站式制作服务体系。</div>
+          <span class="honor">★ 2016—2018 广电总局 TV 地标 · 连续三年年度后期制作公司</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-year">2023 — 2025</div>
+        <div class="timeline-content">
+          <div class="title">观察期 · 品牌内容 / 短视频 / Creator Content</div>
+          <div class="role">Observation Phase · Brand & Creator Content</div>
+          <div class="desc">离开轩歌后主动放慢节奏,跳出传统综艺工业化体系,深入观察 Creator Economy、品牌内容、短视频等新内容形态的生产逻辑。参与京东方、PICO、花西子、字节巨量引擎、学而思、凯叔讲故事等品牌与创作者内容的后期工作。</div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-year">2026 — Now</div>
+        <div class="timeline-content">
+          <div class="title">重新出发 · AI × Creator Pipeline</div>
+          <div class="role">New Chapter · Building the Next-Gen Workflow</div>
+          <div class="desc">2026 年起,正式投入下一代 AI 后期工作流的研发与实践。聚焦 Creator 与 MCN 团队的工业化升级——从字幕自动化、跨 NLE 协同,到 AI 辅助内容整理与跨平台交付。在 ethanmaibuilds.com 构建面向现代剪辑团队的工具体系。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== AWARDS (strip) ===== -->
+<section id="awards" style="padding: 0;">
+  <div class="awards-strip">
+    <div class="section-header" style="margin-bottom: 56px;">
+      <div class="section-num"><span>03</span> / Awards</div>
+      <h2 class="section-title">
+        Industry <em>recognition</em>.
+        <span class="cn">行业荣誉</span>
+      </h2>
+    </div>
+
+    <div class="awards-inner">
+      <div class="label-vertical">Honors<br>荣誉</div>
+
+      <div class="awards-list">
+        <div class="award-card">
+          <div class="year">2011</div>
+          <div class="name">
+            年度优秀员工
+            <span class="en">Excellent Employee of the Year</span>
+          </div>
+          <div class="issuer">光线传媒 · Enlight Media</div>
+        </div>
+
+        <div class="award-card">
+          <div class="year">2016 — 2018 · 三连</div>
+          <div class="name">
+            年度后期制作公司
+            <span class="en">Annual Post-Production Company</span>
+          </div>
+          <div class="issuer">国家广电总局 TV 地标 · SAPPRFT TV Landmarks</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PROJECTS ===== -->
+<section id="projects">
+  <div class="section-header">
+    <div class="section-num"><span>04</span> / Selected Productions</div>
+    <h2 class="section-title">
+      Productions <em>at scale</em>.
+      <span class="cn">代表项目</span>
+    </h2>
+  </div>
+
+  <div class="projects-grid">
+
+    <!-- 中国新说唱 -->
+    <div class="project-card">
+      <div class="num">P / 01</div>
+      <div class="platform">iQIYI · 爱奇艺 S+ 超级网综</div>
+      <div class="name">中国新说唱</div>
+      <div class="name-en">The Rap of China</div>
+      <div class="stats">
+        <div class="stat-item">
+          <div class="k">EP01 4hr Views</div>
+          <div class="v">1<span class="unit">亿+</span></div>
+        </div>
+        <div class="stat-item">
+          <div class="k">EP07 Total</div>
+          <div class="v">10<span class="unit">亿+</span></div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Weibo Topic</div>
+          <div class="v">40<span class="unit">亿+</span></div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Format</div>
+          <div class="v text">剧集式叙事真人秀</div>
+        </div>
+      </div>
+      <div class="desc">
+        中国第一个以"剧集式"叙事理念制作的真人秀,华语青年说唱音乐节目。明星制作人:吴亦凡、张震岳、MC HotDog、潘玮柏、邓紫棋。
+      </div>
+    </div>
+
+    <!-- 喜欢你我也是 -->
+    <div class="project-card">
+      <div class="num">P / 02</div>
+      <div class="platform">iQIYI · 爱奇艺</div>
+      <div class="name">喜欢你我也是</div>
+      <div class="name-en">Crush — Lovely Date</div>
+      <div class="stats">
+        <div class="stat-item">
+          <div class="k">Recording</div>
+          <div class="v">30<span class="unit">天连录</span></div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Cameras</div>
+          <div class="v">96<span class="unit">机位</span></div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Footage</div>
+          <div class="v">2000<span class="unit">T 素材</span></div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Format</div>
+          <div class="v text">情感观察 · 剧情式</div>
+        </div>
+      </div>
+      <div class="desc">
+        高密度素材项目代表案例。30 天不间断录制 / 96 台机位 / 2000T 素材体量——后期素材管理、协同剪辑、剧情式叙事重塑的极限挑战。
+      </div>
+    </div>
+
+    <!-- 梦想星搭档 -->
+    <div class="project-card">
+      <div class="num">P / 03</div>
+      <div class="platform">CCTV 1 · 央视综合频道黄金档</div>
+      <div class="name">梦想星搭档</div>
+      <div class="name-en">Dream Star Partners</div>
+      <div class="stats">
+        <div class="stat-item">
+          <div class="k">National Network</div>
+          <div class="v">2.1<span class="unit"></span></div>
+        </div>
+        <div class="stat-item">
+          <div class="k">CMS 50 Cities</div>
+          <div class="v">2.165<span class="unit"></span></div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Genre</div>
+          <div class="v text">现象级音乐公益</div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Mission</div>
+          <div class="v text">"叫醒耳朵 一起唱"</div>
+        </div>
+      </div>
+      <div class="desc">
+        中国现象级音乐公益节目,聚焦听障儿童公益。央视综合频道黄金档播出,引发全国音乐公益狂潮。
+      </div>
+    </div>
+
+    <!-- 挑战者联盟 -->
+    <div class="project-card">
+      <div class="num">P / 04</div>
+      <div class="platform">Zhejiang TV · 浙江卫视</div>
+      <div class="name">挑战者联盟</div>
+      <div class="name-en">Challengers' League</div>
+      <div class="stats">
+        <div class="stat-item">
+          <div class="k">National Network</div>
+          <div class="v">1.6<span class="unit"></span></div>
+        </div>
+        <div class="stat-item">
+          <div class="k">CMS 50 Cities</div>
+          <div class="v">2.879<span class="unit"></span></div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Genre</div>
+          <div class="v text">大型户外真人秀</div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Era</div>
+          <div class="v text">卫视真人秀黄金期</div>
+        </div>
+      </div>
+      <div class="desc">
+        浙江卫视王牌户外真人秀,卫视黄金档级别项目。CMS 50 城收视 2.879,卫视真人秀工业化标杆。
+      </div>
+    </div>
+
+    <!-- 匠心传奇 -->
+    <div class="project-card">
+      <div class="num">P / 05</div>
+      <div class="platform">Jiangsu TV × 国酒茅台</div>
+      <div class="name">匠心传奇</div>
+      <div class="name-en">The Legend of Designers</div>
+      <div class="stats">
+        <div class="stat-item">
+          <div class="k">Host</div>
+          <div class="v text">杨澜</div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Episodes</div>
+          <div class="v">12<span class="unit">集</span></div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Genre</div>
+          <div class="v text">人文 · 文化自信</div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Brand</div>
+          <div class="v text">国酒茅台冠名</div>
+        </div>
+      </div>
+      <div class="desc">
+        高端人文纪录片项目。杨澜与"匠心大使"探访十二位中国不同领域的"意匠大师",共同完成"国匠大展"。品牌定制内容的精细化后期标准。
+      </div>
+    </div>
+
+    <!-- 中国地名大会 -->
+    <div class="project-card">
+      <div class="num">P / 06</div>
+      <div class="platform">CCTV · 中央电视台</div>
+      <div class="name">中国地名大会</div>
+      <div class="name-en">China Geographical Names Conference</div>
+      <div class="stats">
+        <div class="stat-item">
+          <div class="k">Network</div>
+          <div class="v text">CCTV 央视</div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Genre</div>
+          <div class="v text">文化知识竞答</div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Position</div>
+          <div class="v text">央视品牌文化节目</div>
+        </div>
+        <div class="stat-item">
+          <div class="k">Standard</div>
+          <div class="v text">国家级播出标准</div>
+        </div>
+      </div>
+      <div class="desc">
+        央视品牌文化节目。从地名切入中华文化,知识竞答+人文叙事,国家级播出标准与文化深度的双重要求。
+      </div>
+    </div>
 
   </div>
+</section>
+
+<!-- ===== INFRASTRUCTURE ===== -->
+<section id="infrastructure" class="infra">
+  <div class="section-header">
+    <div class="section-num"><span>05</span> / Infrastructure</div>
+    <h2 class="section-title">
+      Built from <em>the ground up</em>.
+      <span class="cn">从零搭建的后期工业基础设施</span>
+    </h2>
+  </div>
+
+  <div class="infra-grid">
+    <div class="label-vertical">Built<br>已建</div>
+
+    <div class="infra-content">
+      <div class="infra-headline">
+        "We didn't just lead post — we engineered the room, the network, the team architecture."
+        <span class="cn">不只是做后期,而是把机房、网络、团队架构,从零搭起来。</span>
+      </div>
+
+      <div class="infra-stats">
+        <div class="infra-stat">
+          <div class="big-num">2000<span class="unit">T</span></div>
+          <div class="label">Central Storage</div>
+          <div class="desc">XSAN 光纤协议<br>中央存储网络</div>
+        </div>
+        <div class="infra-stat">
+          <div class="big-num">600<span class="unit">㎡</span></div>
+          <div class="label">Main Facility</div>
+          <div class="desc">主力机房<br>真人秀高清制作中心</div>
+        </div>
+        <div class="infra-stat">
+          <div class="big-num">52<span class="unit">+20</span></div>
+          <div class="label">Workstations</div>
+          <div class="desc">52 MacPro 剪辑站点<br>20 iMac/PC 包装站点</div>
+        </div>
+        <div class="infra-stat">
+          <div class="big-num">4<span class="unit">+1</span></div>
+          <div class="label">Spec Rooms</div>
+          <div class="desc">审片室 / 导演剪辑室<br>调色室 / 混音室</div>
+        </div>
+      </div>
+
+      <div class="infra-detail">
+        <strong>基于 XSAN 光纤协议的 2000T 高清中央存储网络</strong>,引入当时领先的 Active 中央存储服务器,打造 <strong>Final Cut Pro 7 与 Premiere Pro 双轨剪辑制作系统</strong>。600 平米主力机房:2000T 光纤中央存储 · 52 台 MacPro 剪辑站点 · 20 台 iMac/PC 包装站点 · 独立审片室 / 导演独立剪辑室 / 调色室 / 混音室——支撑高密度、多剪辑师并行的大型真人秀与综艺制作。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TEAM ARCHITECTURE ===== -->
+<section id="team">
+  <div class="section-header">
+    <div class="section-num"><span>06</span> / Team Architecture</div>
+    <h2 class="section-title">
+      A <em>one-stop</em> studio.
+      <span class="cn">一站式综艺后期全案体系</span>
+    </h2>
+  </div>
+
+  <div class="team">
+    <div class="label-vertical">Structure<br>架构</div>
+
+    <div class="team-content">
+      <div class="team-intro">
+        "From raw footage to delivery — clients only join the review."
+        <span class="cn">建立一站式制作服务体系——统筹前期导演、后期导演、剪辑师、包装特效师等制作体系,从接收素材到成片输出,仅需甲方参与审片。</span>
+      </div>
+
+      <div class="team-grid">
+
+        <div class="team-card">
+          <div class="num">— 01</div>
+          <h3>品质控制组
+            <span class="en">Quality Control</span>
+          </h3>
+          <div class="roles">总监 + 项目经理<br>剪辑指导 + 包装总监</div>
+        </div>
+
+        <div class="team-card">
+          <div class="num">— 02</div>
+          <h3>后期编剧组
+            <span class="en">Post-Production Writers</span>
+          </h3>
+          <div class="roles">剪辑指导 + 后期编剧<br>主副剪辑师</div>
+        </div>
+
+        <div class="team-card">
+          <div class="num">— 03</div>
+          <h3>剪辑组
+            <span class="en">Post-Editors</span>
+          </h3>
+          <div class="roles">剪辑指导 + 主副剪辑师<br>资深剪辑师</div>
+        </div>
+
+        <div class="team-card">
+          <div class="num">— 04</div>
+          <h3>DIT 组
+            <span class="en">Digital Imaging Technician</span>
+          </h3>
+          <div class="roles">资深剪辑师<br>后期编剧</div>
+        </div>
+
+        <div class="team-card">
+          <div class="num">— 05</div>
+          <h3>包装特效组
+            <span class="en">Visual Effects</span>
+          </h3>
+          <div class="roles">CG 特效设计师 + 平面设计师<br>视觉特效编剧</div>
+        </div>
+
+        <div class="team-card">
+          <div class="num">— 06</div>
+          <h3>音频调色组
+            <span class="en">Recording & Colorist</span>
+          </h3>
+          <div class="roles">音频师 + 调色师<br>音乐顾问 + 版权音乐顾问</div>
+        </div>
+
+        <div class="team-card">
+          <div class="num">— 07</div>
+          <h3>统筹组
+            <span class="en">Co-ordinations</span>
+          </h3>
+          <div class="roles">责任导演<br>资深剪辑师</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PLATFORMS / NETWORKS ===== -->
+<section id="platforms">
+  <div class="section-header">
+    <div class="section-num"><span>07</span> / Networks</div>
+    <h2 class="section-title">
+      Across <em>every screen</em>.
+      <span class="cn">服务平台版图 · 50+ 档作品</span>
+    </h2>
+  </div>
+
+  <div class="platforms">
+    <div class="label-vertical">Networks<br>平台</div>
+
+    <div class="platforms-grid">
+      <div class="platform-group">
+        <div class="name">CCTV <span class="count">· 10 shows</span></div>
+        <ul>
+          <li>中国地名大会 · 知识竞答</li>
+          <li>梦想新搭档 · 音乐歌唱</li>
+          <li>幸福账单 · 闯关竞技</li>
+          <li>绿水青山看中国 · 知识</li>
+          <li>劳动与梦想 · 致敬晚会</li>
+          <li>梦想盛典 · 综合晚会</li>
+          <li>希望英语 · 知识竞答</li>
+          <li>合唱先锋 · 音乐歌唱</li>
+          <li>向阳花开 · 综合晚会</li>
+          <li>正月好味道 · 综合晚会</li>
+        </ul>
+      </div>
+
+      <div class="platform-group">
+        <div class="name">iQIYI <span class="count">· 9 shows</span></div>
+        <ul>
+          <li>中国新说唱 · 音乐剧情</li>
+          <li>喜欢你我也是 · 剧情观察</li>
+          <li>偶滴歌神啊 · 歌唱</li>
+          <li>嗨到你红了 · 才艺</li>
+          <li>爱in思谈 · 情感</li>
+          <li>吃光全宇宙 · 旅行</li>
+          <li>出发吧铲屎官 · 宠物</li>
+          <li>奇葩的轰趴 · 吐槽</li>
+          <li>家简成厨 · 美食</li>
+        </ul>
+      </div>
+
+      <div class="platform-group">
+        <div class="name">省级卫视 <span class="count">· 9 networks</span></div>
+        <ul>
+          <li>挑战者联盟(浙江)</li>
+          <li>匠心传奇 · 爱的时差(江苏)</li>
+          <li>超级大首映 · 国剧进行时(安徽)</li>
+          <li>好运旅行团(东南)</li>
+          <li>为梦想加速 · 火力无限(深圳)</li>
+          <li>国学小名士(山东)</li>
+          <li>嘿大兄弟(黑龙江)</li>
+          <li>为您喝彩(河南)</li>
+          <li>大牌玩唱会(CTV 重庆)</li>
+        </ul>
+      </div>
+
+      <div class="platform-group">
+        <div class="name">Tencent Video <span class="count">· 腾讯视频</span></div>
+        <ul>
+          <li>年味 FUN · 美食人情</li>
+          <li>约吧大明星 · 任务观察</li>
+          <li>孩子的神秘生活 · 观察真人秀</li>
+        </ul>
+      </div>
+
+      <div class="platform-group">
+        <div class="name">Youku <span class="count">· 优酷</span></div>
+        <ul>
+          <li>这就是铁甲 · 竞技</li>
+          <li>爱的时差 · 剧情观察</li>
+          <li>天猫晚会花絮 · 综合</li>
+          <li>茜你一顿饭 · 美食</li>
+        </ul>
+      </div>
+
+      <div class="platform-group">
+        <div class="name">Sohu · Weibo · QQ News</div>
+        <ul>
+          <li>搭车卡拉 SHOW(搜狐)</li>
+          <li>好汉两个伴(搜狐)</li>
+          <li>热搜不要停(微博)</li>
+          <li>回家的礼物(腾讯新闻直播)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MODERN BRAND CONTENT ===== -->
+<section id="modern">
+  <div class="section-header">
+    <div class="section-num"><span>08</span> / Brand & Creator Content</div>
+    <h2 class="section-title">
+      Into the <em>new economy</em>.
+      <span class="cn">2023 — 2025 · 品牌 / 创作者内容观察期</span>
+    </h2>
+  </div>
+
+  <div class="modern">
+    <div class="label-vertical">Brands<br>客户</div>
+
+    <div>
+      <p class="modern-intro">
+        离开传统综艺工业化体系后,主动进入 <em>Creator Economy</em> 与品牌内容的生产现场——
+        与 <em>字节跳动</em> 旗下巨量星图、巨量引擎、懂车帝深度合作,并参与 PICO、京东方、花西子、学而思、人民日报 × 小红书 等品牌、平台、机构的 TVC、梯媒广告、品牌微纪录片、短视频营销、系列课程等多种内容形态,深入观察新一代内容生产逻辑。
+      </p>
+
+      <div class="modern-clients">
+        <div class="client-tile"><div class="brand-name">字节跳动 ByteDance</div><div class="work-type">集团合作</div></div>
+        <div class="client-tile"><div class="brand-name">巨量星图</div><div class="work-type">字节跳动 · 官方号</div></div>
+        <div class="client-tile"><div class="brand-name">巨量引擎</div><div class="work-type">字节跳动 · 官方号</div></div>
+        <div class="client-tile"><div class="brand-name">懂车帝</div><div class="work-type">字节跳动 · 汽车垂类</div></div>
+        <div class="client-tile"><div class="brand-name">京东方 BOE</div><div class="work-type">TVC · 小课屏</div></div>
+        <div class="client-tile"><div class="brand-name">顺丰丰图</div><div class="work-type">TVC · 数字孪生平台</div></div>
+        <div class="client-tile"><div class="brand-name">PICO</div><div class="work-type">短视频营销系列</div></div>
+        <div class="client-tile"><div class="brand-name">倍轻松 × 肖战</div><div class="work-type">TVC · 梯媒广告</div></div>
+        <div class="client-tile"><div class="brand-name">东易日盛</div><div class="work-type">TVC · 家装品牌</div></div>
+        <div class="client-tile"><div class="brand-name">花西子</div><div class="work-type">微纪录片 · 用户故事</div></div>
+        <div class="client-tile"><div class="brand-name">突破润滑油</div><div class="work-type">短视频营销</div></div>
+        <div class="client-tile"><div class="brand-name">学而思</div><div class="work-type">品牌形象 · 系列课程</div></div>
+        <div class="client-tile"><div class="brand-name">凯叔讲故事</div><div class="work-type">系列课程内容</div></div>
+        <div class="client-tile"><div class="brand-name">人民日报 × 小红书</div><div class="work-type">MV《昨日青空》· 尤长靖</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PIPELINE / NOW BUILDING ===== -->
+<section id="pipeline" style="padding: 0;">
+  <div class="pipeline-section">
+    <div class="section-header">
+      <div class="section-num"><span>09</span> / Now Building</div>
+      <h2 class="section-title">
+        The <em>next</em> pipeline.
+        <span class="cn">正在构建</span>
+      </h2>
+    </div>
+
+    <div class="pipeline-inner">
+      <div class="label-vertical">Lab<br>实验室</div>
+
+      <div class="pipeline-content">
+        <blockquote>
+          下一代剪辑团队不会被 AI 取代——
+          但他们会被 <em>用好 AI</em> 的团队取代。
+          <span class="cn">我正在构建那个让团队"用好 AI"的工具层,面向 Creator 与 MCN 团队。</span>
+        </blockquote>
+
+        <div class="pipeline-status">
+          <div class="label">In Active Development · Cutsmith · 2026 启动</div>
+          <p>
+            2026 年 5 月正式启动 AI 后期工作流的研发与实践,聚焦字幕自动化、跨 NLE 协同、AI 辅助内容整理、跨平台改版与交付。开发者品牌 <em style="color:var(--accent);font-style:italic;">Cutsmith</em>(cutsmith.io)持续输出面向 Creator 与 MCN 团队的工业化工具。
+          </p>
+        </div>
+
+        <div class="pipeline-areas">
+          <div class="pipeline-area">
+            <h4>字幕与时间线自动化
+              <span class="en">Subtitle & Timeline Automation</span>
+            </h4>
+            <p>从转录、字幕生成到时间线匹配的全链路自动化,降低重复劳动,释放剪辑师创意时间。</p>
+          </div>
+
+          <div class="pipeline-area">
+            <h4>跨 NLE 工作流协同
+              <span class="en">Cross-NLE Collaboration</span>
+            </h4>
+            <p>Premiere / Final Cut Pro / DaVinci Resolve / CapCut 跨平台协同与标准化输出。</p>
+          </div>
+
+          <div class="pipeline-area">
+            <h4>AI 辅助内容整理
+              <span class="en">AI-Assisted Content Organization</span>
+            </h4>
+            <p>素材标记、智能粗剪、内容检索——为 Creator 与 MCN 团队搭建轻量化后期基础设施。</p>
+          </div>
+
+          <div class="pipeline-area">
+            <h4>跨平台改版与交付
+              <span class="en">Multi-Platform Adaptation</span>
+            </h4>
+            <p>横竖版改版、多平台规格适配、批量交付——MCN 高频内容生产的关键提效环节。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CONTACT ===== -->
+<section class="contact" id="contact">
+  <div class="label">Let's Talk · 联系</div>
+  <h2>
+    Looking for the right <em>team</em>,<br>
+    to build the next <em>Creator Pipeline</em>.
+    <span class="cn">寻找下一段可以共同搭建内容工业化体系的旅程</span>
+  </h2>
+
+  <div class="contact-methods">
+    <div class="contact-method">
+      <div class="k">Email · 邮箱</div>
+      <div class="v">ethanmaibuilds@gmail.com</div>
+    </div>
+    <div class="contact-method">
+      <div class="k">WeChat · 微信</div>
+      <div class="v">[ 请联系邮箱获取 ]</div>
+    </div>
+    <div class="contact-method">
+      <div class="k">Product · 产品品牌</div>
+      <div class="v">cutsmith.io</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>© 2026 EthanMai · also building Cutsmith</div>
+</footer>
+
 </body>
 </html>
